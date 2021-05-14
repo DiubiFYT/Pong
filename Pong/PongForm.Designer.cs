@@ -29,7 +29,6 @@ namespace Pong
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.panelLobby = new System.Windows.Forms.Panel();
             this.panelAcceptDuel = new System.Windows.Forms.Panel();
             this.btnAcceptDuel = new System.Windows.Forms.Button();
@@ -44,9 +43,10 @@ namespace Pong
             this.lblEnemyIP = new System.Windows.Forms.Label();
             this.lblTitle = new System.Windows.Forms.Label();
             this.panelGame = new System.Windows.Forms.Panel();
-            this.secondTimer = new System.Windows.Forms.Timer(this.components);
+            this.Game = new Pong.Game();
             this.panelLobby.SuspendLayout();
             this.panelAcceptDuel.SuspendLayout();
+            this.panelGame.SuspendLayout();
             this.SuspendLayout();
             // 
             // panelLobby
@@ -222,24 +222,31 @@ namespace Pong
             // panelGame
             // 
             this.panelGame.BackColor = System.Drawing.Color.Black;
+            this.panelGame.Controls.Add(this.Game);
             this.panelGame.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelGame.Location = new System.Drawing.Point(0, 0);
             this.panelGame.Name = "panelGame";
             this.panelGame.Size = new System.Drawing.Size(1232, 666);
             this.panelGame.TabIndex = 1;
+            this.panelGame.Visible = false;
             // 
-            // secondTimer
+            // Game
             // 
-            this.secondTimer.Enabled = true;
-            this.secondTimer.Interval = 1000;
+            this.Game.BackColor = System.Drawing.Color.Black;
+            this.Game.Location = new System.Drawing.Point(0, 0);
+            this.Game.Name = "Game";
+            this.Game.Size = new System.Drawing.Size(1232, 666);
+            this.Game.TabIndex = 0;
+            this.Game.Visible = false;
             // 
             // PongForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1232, 666);
-            this.Controls.Add(this.panelLobby);
             this.Controls.Add(this.panelGame);
+            this.Controls.Add(this.panelLobby);
+            this.MinimumSize = new System.Drawing.Size(1248, 705);
             this.Name = "PongForm";
             this.Text = "Pong";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PongForm_FormClosing);
@@ -247,6 +254,7 @@ namespace Pong
             this.panelLobby.ResumeLayout(false);
             this.panelLobby.PerformLayout();
             this.panelAcceptDuel.ResumeLayout(false);
+            this.panelGame.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -262,12 +270,13 @@ namespace Pong
         private System.Windows.Forms.Label lblConnecting;
         private System.Windows.Forms.Button btnHostLobby;
         private System.Windows.Forms.Label lblTimerConnecting;
-        private System.Windows.Forms.Timer secondTimer;
         private System.Windows.Forms.Label lblPublicIP;
         private System.Windows.Forms.Label lblPrivateIP;
         private System.Windows.Forms.Panel panelAcceptDuel;
         private System.Windows.Forms.Button btnAcceptDuel;
         private System.Windows.Forms.Label lblIPEnemyDuel;
+        private Game game1;
+        private Game Game;
     }
 }
 

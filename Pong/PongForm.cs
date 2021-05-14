@@ -143,7 +143,6 @@ namespace Pong
                     else
                     {
                         Invoke(new Action(() => { lblIPEnemyDuel.Text += bytes[i]; }));
-
                     }
                 }
 
