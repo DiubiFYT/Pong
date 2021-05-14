@@ -77,6 +77,7 @@ namespace Pong
                 ApplyPixeledFont();
 
                 IPAddress enemyIP = IPAddress.Parse(txBxEnemyIP.Text);
+                IPAddress myIP = IPAddress.Parse(GetPrivateIP());
 
                 IPEndPoint endPoint = new IPEndPoint(enemyIP, defaultPort);
 
@@ -85,7 +86,7 @@ namespace Pong
 
                 Stream stm = tcpClient.GetStream();
 
-                byte[] data = Encoding.ASCII.GetBytes(GetPrivateIP());
+                byte[] data = myIP.GetAddressBytes();
                 stm.Write(data, 0, data.Length);
 
                 byte[] response = new byte[100];
