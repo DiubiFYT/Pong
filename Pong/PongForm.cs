@@ -151,7 +151,7 @@ namespace Pong
 
             for (int i = 0; i < k; i++)
             {
-                if(i != 3)
+                if (i != 3)
                 {
                     Invoke(new Action(() => { lblIPEnemyDuel.Text += bytes[i] + "."; }));
                 }
