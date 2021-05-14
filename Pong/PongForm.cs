@@ -224,6 +224,13 @@ namespace Pong
 
         private void btnAcceptDuel_Click(object sender, EventArgs e)
         {
+            if(tcpClient == null)
+            {
+                tcpClient.Close();
+                IPAddress enemyIP = IPAddress.Parse(lblIPEnemyDuel.Text.Split(' ')[0]);
+                tcpClient.Connect(enemyIP, defaultPort); 
+            }
+
             Stream stm = tcpClient.GetStream();
 
             byte[] response = new byte[] { 1 };
