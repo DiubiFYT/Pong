@@ -223,7 +223,7 @@ namespace Pong
         private void btnAcceptDuel_Click(object sender, EventArgs e)
         {
             TcpClient tcpClient = new TcpClient();
-            tcpClient.Connect(lblEnemyIP.Text.Split(' ')[1], defaultPort);
+            tcpClient.Connect(lblIPEnemyDuel.Text.Split(' ')[1], defaultPort);
 
             Stream stm = tcpClient.GetStream();
 
