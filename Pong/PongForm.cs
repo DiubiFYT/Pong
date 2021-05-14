@@ -242,7 +242,7 @@ namespace Pong
 
         private void btnAcceptDuel_Click(object sender, EventArgs e)
         {
-            if (tcpClient == null || !tcpClient.Connected)
+            if(tcpClient == null || !tcpClient.Connected)
             {
                 tcpClient = new TcpClient();
                 IPAddress enemyIP = IPAddress.Parse(lblIPEnemyDuel.Text.Split(' ')[0]);
