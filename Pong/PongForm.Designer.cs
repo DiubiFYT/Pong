@@ -242,6 +242,7 @@ namespace Pong
             this.Controls.Add(this.panelGame);
             this.Name = "PongForm";
             this.Text = "Pong";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PongForm_FormClosing);
             this.Load += new System.EventHandler(this.PongForm_Load);
             this.panelLobby.ResumeLayout(false);
             this.panelLobby.PerformLayout();

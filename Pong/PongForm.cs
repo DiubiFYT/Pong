@@ -5,6 +5,7 @@ using System.Drawing.Text;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -84,7 +85,7 @@ namespace Pong
 
                 Stream stm = tcpClient.GetStream();
 
-                byte[] data = enemyIP.GetAddressBytes();
+                byte[] data = Encoding.ASCII.GetBytes(GetPrivateIP());
                 stm.Write(data, 0, data.Length);
 
                 byte[] response = new byte[100];
@@ -223,13 +224,18 @@ namespace Pong
         private void btnAcceptDuel_Click(object sender, EventArgs e)
         {
             TcpClient tcpClient = new TcpClient();
-            tcpClient.Connect(lblIPEnemyDuel.Text.Split(' ')[1], defaultPort);
+            tcpClient.Connect(lblIPEnemyDuel.Text.Split(' ')[0], defaultPort);
 
             Stream stm = tcpClient.GetStream();
 
             byte[] response = new byte[] { 1 };
 
             stm.Write(response, 0, response.Length);
+        }
+
+        private void PongForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Application.Exit();
         }
     }
 }
