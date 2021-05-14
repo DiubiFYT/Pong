@@ -24,21 +24,9 @@ namespace Pong
         private Random r = new Random();
 
         readonly private static int defaultPort = 5000;
-        readonly private static int listeningPort = 5000;
 
         private TcpListener tcpListener = null;
         private TcpClient tcpClient;
-
-        private BackgroundWorker listener = new BackgroundWorker();
-
-        CancellationTokenSource cts = new CancellationTokenSource();
-        CancellationToken ct;
-
-        private System.Windows.Forms.Timer timerStopTCPListener = new System.Windows.Forms.Timer()
-        {
-            Enabled = true,
-            Interval = 10000
-        };
 
         public PongForm()
         {
@@ -66,10 +54,8 @@ namespace Pong
         {
             ApplyPixeledFont();
 
-            lblPrivateIP.Text = "Private IP: " + GetPrivateIP();
-            lblPublicIP.Text = "Public IP: " + GetPublicIP();
-
-            ct = cts.Token;
+            lblPrivateIP.Text = "Private IP: " + Methods.GetPrivateIP();
+            lblPublicIP.Text = "Public IP: " + Methods.GetPublicIP();
 
             await Task.Run(() => { ListenForRequests(); });
         }
@@ -82,10 +68,8 @@ namespace Pong
                 lblConnecting.Visible = true;
                 ApplyPixeledFont();
 
-                cts.Cancel();
-
                 IPAddress enemyIP = IPAddress.Parse(txBxEnemyIP.Text);
-                IPAddress myIP = IPAddress.Parse(GetPrivateIP());
+                IPAddress myIP = IPAddress.Parse(Methods.GetPrivateIP());
 
                 IPEndPoint endPoint = new IPEndPoint(enemyIP, defaultPort);
 
@@ -135,26 +119,8 @@ namespace Pong
             }
         }
 
-        private void GetMatchRequestResponse()
-        {
-            Stream stm = tcpClient.GetStream();
-            byte[] response = new byte[1];
-            int k = stm.Read(response, 0, response.Length);
-
-            if (k.ToString() == "1")
-            {
-                panelLobby.Visible = false;
-            }
-        }
-
         private void ListenForRequests()
         {
-            //timerStopTCPListener.Tick += StopTCPListener;
-            //timerStopTCPListener.Start();
-
-            //secondTimer.Tick += UpdateTimerLabel;
-            //secondTimer.Start();
-
             tcpListener = new TcpListener(IPAddress.Any, defaultPort);
             tcpListener.Start();
             Socket sock = tcpListener.AcceptSocket();
@@ -162,7 +128,7 @@ namespace Pong
             byte[] bytes = new byte[4];
             int k = sock.Receive(bytes);
 
-            if (bytes[0].ToString() == "1")
+            if (Encoding.ASCII.GetString(bytes).Contains("Accept match"))
             {
 
             }
@@ -191,55 +157,6 @@ namespace Pong
             tcpListener.Stop();
         }
 
-        //int seconds = 10;
-
-        //private void UpdateTimerLabel(object sender, EventArgs e)
-        //{
-        //    lblTimerConnecting.Visible = true;
-
-        //    string text = "Listening for " + seconds + " seconds";
-
-        //    Invoke(new Action(() =>
-        //    {
-        //        lblTimerConnecting.Text = text;
-        //    }));
-
-        //    seconds--;
-
-        //    if (seconds == 0)
-        //    {
-        //        Invoke(new Action(() =>
-        //        {
-        //            lblTimerConnecting.Visible = false;
-        //        }));
-
-        //        secondTimer.Stop();
-        //        secondTimer.Tick -= UpdateTimerLabel;
-        //        seconds = 8;
-        //    }
-        //}
-
-        private static string GetPrivateIP()
-        {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return ip.ToString();
-                }
-            }
-
-            throw new Exception("No network adapters with an IPv4 address in the system!");
-        }
-
-        private static string GetPublicIP()
-        {
-            string externalIpString = new WebClient().DownloadString("http://icanhazip.com").Replace("\\r\\n", "").Replace("\\n", "").Trim();
-
-            return externalIpString;
-        }
-
         private void btnAcceptDuel_Click(object sender, EventArgs e)
         {
             if(tcpClient == null || !tcpClient.Connected)
@@ -251,7 +168,7 @@ namespace Pong
 
             Stream stm = tcpClient.GetStream();
 
-            byte[] response = new byte[] { 1 };
+            byte[] response = Encoding.ASCII.GetBytes("Accept match");
 
             stm.Write(response, 0, response.Length);
 
