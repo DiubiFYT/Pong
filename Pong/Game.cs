@@ -6,7 +6,6 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Input;
 
@@ -14,6 +13,15 @@ namespace Pong
 {
     public partial class Game : UserControl
     {
+        private bool isHost;
+
+        private Timer timer = new Timer()
+        {
+            Interval = 50
+        };
+
+        private int ballSpeedY = 0;
+        private int ballSpeedX = 2;
 
         public Game()
         {
@@ -25,11 +33,28 @@ namespace Pong
             if (Visible)
             {
                 StartGame();
+
+                if (isHost)
+                {
+                    timer.Enabled = true;
+                    timer.Tick += Timer_Tick;
+                }
             }
             else
             {
 
             }
+        }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            Ball.Left += ballSpeedX;
+            Ball.Top += ballSpeedY;
+        }
+
+        private void SendData()
+        {
+
         }
 
         private void StartGame()
@@ -41,7 +66,18 @@ namespace Pong
         {
             if(e.KeyCode == Keys.W)
             {
-                Player1.Location = new Point(Player1.Location.X, Player1.Location.Y + 1);
+                if(Player1.Top != TopBorder.Bottom)
+                {
+                    Player1.Top -= 8;
+                }
+            }
+            
+            if(e.KeyCode == Keys.S)
+            {
+                if(Player1.Bottom != BottomBorder.Top)
+                {
+                    Player1.Top += 8;
+                }
             }
         }
     }

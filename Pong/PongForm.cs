@@ -172,6 +172,7 @@ namespace Pong
             stm.Write(response, 0, response.Length);
 
             panelGame.Visible = true;
+            Game.Visible = true;
             panelLobby.Visible = false;
         }
 
