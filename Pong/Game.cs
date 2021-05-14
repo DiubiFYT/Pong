@@ -13,7 +13,7 @@ namespace Pong
 {
     public partial class Game : UserControl
     {
-        private bool isHost;
+        public static bool isHost = false;
 
         private Timer timer = new Timer()
         {

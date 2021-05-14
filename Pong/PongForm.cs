@@ -151,6 +151,8 @@ namespace Pong
                     lblIPEnemyDuel.Text += " wants to duel!";
                     panelAcceptDuel.Visible = true;
                 }));
+
+                Game.isHost = true;
             }
             sock.Close();
             tcpListener.Stop();
@@ -174,6 +176,8 @@ namespace Pong
             panelGame.Visible = true;
             Game.Visible = true;
             panelLobby.Visible = false;
+
+            Game.isHost = false;
         }
 
         private void PongForm_FormClosing(object sender, FormClosingEventArgs e)
