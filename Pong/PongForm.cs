@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -29,6 +30,9 @@ namespace Pong
         private TcpClient tcpClient;
 
         private BackgroundWorker listener = new BackgroundWorker();
+
+        CancellationTokenSource cts = new CancellationTokenSource();
+        CancellationToken ct;
 
         private System.Windows.Forms.Timer timerStopTCPListener = new System.Windows.Forms.Timer()
         {
@@ -65,6 +69,8 @@ namespace Pong
             lblPrivateIP.Text = "Private IP: " + GetPrivateIP();
             lblPublicIP.Text = "Public IP: " + GetPublicIP();
 
+            ct = cts.Token;
+
             await Task.Run(() => { ListenForRequests(); });
         }
 
@@ -75,6 +81,8 @@ namespace Pong
                 SwitchConnectionLabelStyle(ConnectionLabelStyle.Connecting);
                 lblConnecting.Visible = true;
                 ApplyPixeledFont();
+
+                cts.Cancel();
 
                 IPAddress enemyIP = IPAddress.Parse(txBxEnemyIP.Text);
                 IPAddress myIP = IPAddress.Parse(GetPrivateIP());
@@ -89,7 +97,7 @@ namespace Pong
                 byte[] data = myIP.GetAddressBytes();
                 stm.Write(data, 0, data.Length);
 
-                byte[] response = new byte[100];
+                byte[] response = new byte[1];
                 int k = stm.Read(response, 0, response.Length);
 
                 if (k.ToString() == "1")
@@ -146,6 +154,13 @@ namespace Pong
             tcpListener = new TcpListener(IPAddress.Any, defaultPort);
             tcpListener.Start();
             Socket sock = tcpListener.AcceptSocket();
+
+            if (ct.IsCancellationRequested)
+            {
+                sock.Close();
+                tcpListener.Stop();
+                return;
+            }
 
             byte[] bytes = new byte[4];
             int k = sock.Receive(bytes);
@@ -226,7 +241,6 @@ namespace Pong
         {
             if(tcpClient == null)
             {
-                tcpClient.Close();
                 IPAddress enemyIP = IPAddress.Parse(lblIPEnemyDuel.Text.Split(' ')[0]);
                 tcpClient.Connect(enemyIP, defaultPort); 
             }
