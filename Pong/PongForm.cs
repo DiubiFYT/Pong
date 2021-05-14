@@ -223,14 +223,14 @@ namespace Pong
 
         private void btnAcceptDuel_Click(object sender, EventArgs e)
         {
-            TcpClient tcpClient = new TcpClient();
-            tcpClient.Connect(lblIPEnemyDuel.Text.Split(' ')[0], defaultPort);
-
             Stream stm = tcpClient.GetStream();
 
             byte[] response = new byte[] { 1 };
 
             stm.Write(response, 0, response.Length);
+
+            panelGame.Visible = true;
+            panelLobby.Visible = false;
         }
 
         private void PongForm_FormClosing(object sender, FormClosingEventArgs e)
