@@ -96,14 +96,6 @@ namespace Pong
 
                 byte[] data = myIP.GetAddressBytes();
                 stm.Write(data, 0, data.Length);
-
-                byte[] response = new byte[1];
-                int k = stm.Read(response, 0, response.Length);
-
-                if (k.ToString() == "1")
-                {
-                    panelLobby.Visible = false;
-                }
             }
             catch (Exception exc)
             {
@@ -143,6 +135,18 @@ namespace Pong
             }
         }
 
+        private void GetMatchRequestResponse()
+        {
+            Stream stm = tcpClient.GetStream();
+            byte[] response = new byte[1];
+            int k = stm.Read(response, 0, response.Length);
+
+            if (k.ToString() == "1")
+            {
+                panelLobby.Visible = false;
+            }
+        }
+
         private void ListenForRequests()
         {
             //timerStopTCPListener.Tick += StopTCPListener;
@@ -155,35 +159,34 @@ namespace Pong
             tcpListener.Start();
             Socket sock = tcpListener.AcceptSocket();
 
-            if (ct.IsCancellationRequested)
-            {
-                sock.Close();
-                tcpListener.Stop();
-                return;
-            }
-
             byte[] bytes = new byte[4];
             int k = sock.Receive(bytes);
 
-            for (int i = 0; i < k; i++)
+            if (bytes[0].ToString() == "1")
             {
-                if (i != 3)
-                {
-                    Invoke(new Action(() => { lblIPEnemyDuel.Text += bytes[i] + "."; }));
-                }
-                else
-                {
-                    Invoke(new Action(() => { lblIPEnemyDuel.Text += bytes[i]; }));
 
-                }
             }
-
-            Invoke(new Action(() =>
+            else
             {
-                lblIPEnemyDuel.Text += " wants to duel!";
-                panelAcceptDuel.Visible = true;
-            }));
+                for (int i = 0; i < k; i++)
+                {
+                    if (i != 3)
+                    {
+                        Invoke(new Action(() => { lblIPEnemyDuel.Text += bytes[i] + "."; }));
+                    }
+                    else
+                    {
+                        Invoke(new Action(() => { lblIPEnemyDuel.Text += bytes[i]; }));
 
+                    }
+                }
+
+                Invoke(new Action(() =>
+                {
+                    lblIPEnemyDuel.Text += " wants to duel!";
+                    panelAcceptDuel.Visible = true;
+                }));
+            }
             sock.Close();
             tcpListener.Stop();
         }
@@ -239,10 +242,11 @@ namespace Pong
 
         private void btnAcceptDuel_Click(object sender, EventArgs e)
         {
-            if(tcpClient == null)
+            if (tcpClient == null || !tcpClient.Connected)
             {
+                tcpClient = new TcpClient();
                 IPAddress enemyIP = IPAddress.Parse(lblIPEnemyDuel.Text.Split(' ')[0]);
-                tcpClient.Connect(enemyIP, defaultPort); 
+                tcpClient.Connect(enemyIP, defaultPort);
             }
 
             Stream stm = tcpClient.GetStream();
