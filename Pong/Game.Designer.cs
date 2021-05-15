@@ -41,7 +41,7 @@ namespace Pong
             this.Player1.BackColor = System.Drawing.Color.White;
             this.Player1.Location = new System.Drawing.Point(20, 285);
             this.Player1.Name = "Player1";
-            this.Player1.Size = new System.Drawing.Size(19, 93);
+            this.Player1.Size = new System.Drawing.Size(19, 96);
             this.Player1.TabIndex = 0;
             // 
             // Player2
@@ -90,6 +90,7 @@ namespace Pong
             this.Size = new System.Drawing.Size(1232, 666);
             this.VisibleChanged += new System.EventHandler(this.Game_VisibleChanged);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Game_KeyDown);
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Game_KeyUp);
             this.ResumeLayout(false);
 
         }

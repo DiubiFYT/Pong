@@ -23,7 +23,7 @@ namespace Pong
     {
         private Random r = new Random();
 
-        readonly private static int defaultPort = 5000;
+        readonly public static int defaultPort = 5000;
 
         private TcpListener tcpListener = null;
         private TcpClient tcpClient;
@@ -80,8 +80,6 @@ namespace Pong
 
                 byte[] data = myIP.GetAddressBytes();
                 stm.Write(data, 0, data.Length);
-
-                Game.isHost = true;
             }
             catch (Exception exc)
             {
@@ -127,12 +125,19 @@ namespace Pong
             tcpListener.Start();
             Socket sock = tcpListener.AcceptSocket();
 
-            byte[] bytes = new byte[4];
+            byte[] bytes = new byte[20];
             int k = sock.Receive(bytes);
 
             if (Encoding.ASCII.GetString(bytes).Contains("Accept match"))
             {
+                Game.isHost = true;
 
+                Invoke(new Action(() =>
+                {
+                    panelGame.Visible = true;
+                    Game.Visible = true;
+                    panelLobby.Visible = false;
+                }));
             }
             else
             {
@@ -153,15 +158,16 @@ namespace Pong
                     lblIPEnemyDuel.Text += " wants to duel!";
                     panelAcceptDuel.Visible = true;
                 }));
-            }
 
+                Game.isHost = true;
+            }
             sock.Close();
             tcpListener.Stop();
         }
 
         private void btnAcceptDuel_Click(object sender, EventArgs e)
         {
-            if(tcpClient == null || !tcpClient.Connected)
+            if (tcpClient == null || !tcpClient.Connected)
             {
                 tcpClient = new TcpClient();
                 IPAddress enemyIP = IPAddress.Parse(lblIPEnemyDuel.Text.Split(' ')[0]);
@@ -174,11 +180,11 @@ namespace Pong
 
             stm.Write(response, 0, response.Length);
 
+            Game.isHost = false;
+
             panelGame.Visible = true;
             Game.Visible = true;
             panelLobby.Visible = false;
-
-            Game.isHost = false;
         }
 
         private void PongForm_FormClosing(object sender, FormClosingEventArgs e)

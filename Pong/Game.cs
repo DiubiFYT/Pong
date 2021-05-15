@@ -1,31 +1,38 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net;
+using System.Net.Sockets;
 using System.Windows.Forms;
-using System.Windows.Input;
 
 namespace Pong
 {
     public partial class Game : UserControl
     {
-        public static bool isHost = false;
+        public static bool isHost;
 
-        private Timer timer = new Timer()
+        public static IPAddress enemyIP;
+
+        private Timer timerHost = new Timer()
         {
-            Interval = 50
+            Interval = 10
         };
 
         private int ballSpeedY = 0;
-        private int ballSpeedX = 2;
+        private int ballSpeedX = -10;
+
+        public bool isGoingDown;
+        public bool isGoingUp;
+
+        //private Player Player1;
+        //private Player Player2;
+
+        UdpClient udpClient;
+        Socket sock;
 
         public Game()
         {
             InitializeComponent();
+            timerHost.Tick += TimerHost_Tick;
         }
 
         private void Game_VisibleChanged(object sender, EventArgs e)
@@ -34,22 +41,78 @@ namespace Pong
             {
                 StartGame();
 
+                udpClient = new UdpClient();
+                udpClient.Connect(enemyIP, PongForm.defaultPort);
+                sock = udpClient.Client;
+
                 if (isHost)
                 {
-                    timer.Enabled = true;
-                    timer.Tick += Timer_Tick;
+                    timerHost.Enabled = true;
+                }
+                else
+                {
+                    if (timerHost.Enabled)
+                    {
+                        timerHost.Enabled = false;
+                    }
                 }
             }
             else
             {
-
             }
         }
 
-        private void Timer_Tick(object sender, EventArgs e)
+        private void TimerHost_Tick(object sender, EventArgs e)
         {
             Ball.Left += ballSpeedX;
             Ball.Top += ballSpeedY;
+
+            if (isGoingUp)
+            {
+                Player1.Top -= 5;
+            }
+
+            if (isGoingDown)
+            {
+                Player1.Top += 5;
+            }
+
+            if (Ball.Bottom < BottomBorder.Top)
+            {
+                ballSpeedY = -ballSpeedY;
+            }
+
+            if (Ball.Top > TopBorder.Bottom)
+            {
+                ballSpeedY = -ballSpeedY;
+            }
+
+            if (Ball.Right > Bounds.Right || Ball.Left < Bounds.Left)
+            {
+                Ball.Location = new Point((Width / 2) - (Ball.Width / 2), (Height / 2) - (Ball.Height / 2));
+                ballSpeedX = -10;
+                ballSpeedY = 0;
+            }
+
+            if (Ball.Bounds.IntersectsWith(Player1.Bounds) || Ball.Bounds.IntersectsWith(Player2.Bounds))
+            {
+                ballSpeedX = -ballSpeedX;
+
+                if (isGoingDown)
+                {
+                    ballSpeedY -= 2;
+                }
+                else if(isGoingUp)
+                {
+                    ballSpeedY += 2;
+                }
+                else
+                {
+                    ballSpeedY -= 2;
+                }
+            }
+
+            Player2.Location = new Point(Player2.Location.X, Ball.Location.Y);
         }
 
         private void SendData()
@@ -59,25 +122,45 @@ namespace Pong
 
         private void StartGame()
         {
-            
         }
 
         private void Game_KeyDown(object sender, KeyEventArgs e)
         {
-            if(e.KeyCode == Keys.W)
+            if (e.KeyCode == Keys.W)
             {
-                if(Player1.Top != TopBorder.Bottom)
+                if (Player1.Top > TopBorder.Bottom)
                 {
-                    Player1.Top -= 8;
+                    isGoingUp = true;
+                }
+                else
+                {
+                    isGoingUp = false;
                 }
             }
-            
-            if(e.KeyCode == Keys.S)
+
+            if (e.KeyCode == Keys.S)
             {
-                if(Player1.Bottom != BottomBorder.Top)
+                if (Player1.Bottom < BottomBorder.Top)
                 {
-                    Player1.Top += 8;
+                    isGoingDown = true;
                 }
+                else
+                {
+                    isGoingDown = false;
+                }
+            }
+        }
+
+        private void Game_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.W)
+            {
+                isGoingUp = false;
+            }
+
+            if (e.KeyCode == Keys.S)
+            {
+                isGoingDown = false;
             }
         }
     }
