@@ -80,6 +80,8 @@ namespace Pong
 
                 byte[] data = myIP.GetAddressBytes();
                 stm.Write(data, 0, data.Length);
+
+                Game.isHost = true;
             }
             catch (Exception exc)
             {
@@ -151,9 +153,8 @@ namespace Pong
                     lblIPEnemyDuel.Text += " wants to duel!";
                     panelAcceptDuel.Visible = true;
                 }));
-
-                Game.isHost = true;
             }
+
             sock.Close();
             tcpListener.Stop();
         }
