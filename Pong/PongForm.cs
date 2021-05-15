@@ -23,7 +23,7 @@ namespace Pong
     {
         private Random r = new Random();
 
-        readonly public static int defaultPort = 50000;
+        readonly public static int defaultPort = 1069;
 
         private UdpClient udpClient;
         private UdpClient listener;
@@ -78,6 +78,7 @@ namespace Pong
 
                 byte[] data = myIP.GetAddressBytes();
                 udpClient.Send(data, data.Length);
+                udpClient.Close();
             }
             catch (Exception exc)
             {
@@ -168,13 +169,7 @@ namespace Pong
 
             if (udpClient == null || !udpClient.Client.Connected)
             {
-                udpClient = new UdpClient(); 
-                udpClient.Connect(enemyIP, defaultPort);
-            }
-
-            if (udpClient.Client.Connected)
-            {
-                udpClient.Close();
+                udpClient = new UdpClient();
                 udpClient.Connect(enemyIP, defaultPort);
             }
 
@@ -184,6 +179,8 @@ namespace Pong
 
             Game.isHost = false;
             Game.enemyIP = enemyIP;
+
+            udpClient.Close();
 
             panelGame.Visible = true;
             Game.Visible = true;
