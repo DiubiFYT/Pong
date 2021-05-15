@@ -23,7 +23,7 @@ namespace Pong
     {
         private Random r = new Random();
 
-        readonly public static int defaultPort = 1069;
+        readonly public static int defaultPort = 42069;
 
         private UdpClient udpClient;
         private UdpClient listener;
@@ -131,10 +131,13 @@ namespace Pong
                 Game.isHost = true;
                 Game.enemyIP = IPAddress.Parse(txBxEnemyIP.Text);
 
+                Game game = new Game();
+
                 Invoke(new Action(() =>
                 {
                     panelGame.Visible = true;
-                    Game.Visible = true;
+                    panelGame.Controls.Add(game);
+                    game.Visible = true;
                     panelLobby.Visible = false;
                 }));
             }
@@ -182,8 +185,11 @@ namespace Pong
 
             udpClient.Close();
 
+            Game game = new Game();
+
             panelGame.Visible = true;
-            Game.Visible = true;
+            panelGame.Controls.Add(game);
+            game.Visible = true;
             panelLobby.Visible = false;
         }
 

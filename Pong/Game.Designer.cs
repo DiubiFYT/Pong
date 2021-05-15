@@ -89,7 +89,6 @@ namespace Pong
             this.Name = "Game";
             this.Size = new System.Drawing.Size(1232, 666);
             this.Load += new System.EventHandler(this.Game_Load);
-            this.VisibleChanged += new System.EventHandler(this.Game_VisibleChanged);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Game_KeyDown);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Game_KeyUp);
             this.ResumeLayout(false);

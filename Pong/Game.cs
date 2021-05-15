@@ -48,32 +48,21 @@ namespace Pong
         {
             timerHost.Tick += TimerHost_Tick;
             timerGuest.Tick += TimerGuest_Tick;
-        }
 
-        private void Game_VisibleChanged(object sender, EventArgs e)
-        {
-            if (Visible)
+            iPEndPoint = new IPEndPoint(enemyIP, PongForm.defaultPort);
+
+            udpClient = new UdpClient(PongForm.defaultPort);
+            udpClient.Connect(iPEndPoint);
+
+            if (isHost)
             {
-                StartGame();
-
-                iPEndPoint = new IPEndPoint(enemyIP, PongForm.defaultPort);
-
-                udpClient = new UdpClient(PongForm.defaultPort);
-                udpClient.Connect(iPEndPoint);
-
-                if (isHost)
-                {
-                    timerHost.Enabled = true;
-                    timerGuest.Enabled = false;
-                }
-                else
-                {
-                    timerHost.Enabled = false;
-                    timerGuest.Enabled = true;
-                }
+                timerHost.Enabled = true;
+                timerGuest.Enabled = false;
             }
             else
             {
+                timerHost.Enabled = false;
+                timerGuest.Enabled = true;
             }
         }
 

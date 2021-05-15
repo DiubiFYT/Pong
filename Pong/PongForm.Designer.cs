@@ -43,10 +43,8 @@ namespace Pong
             this.lblEnemyIP = new System.Windows.Forms.Label();
             this.lblTitle = new System.Windows.Forms.Label();
             this.panelGame = new System.Windows.Forms.Panel();
-            this.Game = new Pong.Game();
             this.panelLobby.SuspendLayout();
             this.panelAcceptDuel.SuspendLayout();
-            this.panelGame.SuspendLayout();
             this.SuspendLayout();
             // 
             // panelLobby
@@ -65,7 +63,7 @@ namespace Pong
             this.panelLobby.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelLobby.Location = new System.Drawing.Point(0, 0);
             this.panelLobby.Name = "panelLobby";
-            this.panelLobby.Size = new System.Drawing.Size(1232, 768);
+            this.panelLobby.Size = new System.Drawing.Size(1232, 666);
             this.panelLobby.TabIndex = 0;
             // 
             // panelAcceptDuel
@@ -222,22 +220,12 @@ namespace Pong
             // panelGame
             // 
             this.panelGame.BackColor = System.Drawing.Color.Black;
-            this.panelGame.Controls.Add(this.Game);
             this.panelGame.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelGame.Location = new System.Drawing.Point(0, 0);
             this.panelGame.Name = "panelGame";
-            this.panelGame.Size = new System.Drawing.Size(1232, 768);
+            this.panelGame.Size = new System.Drawing.Size(1232, 666);
             this.panelGame.TabIndex = 1;
             this.panelGame.Visible = false;
-            // 
-            // Game
-            // 
-            this.Game.BackColor = System.Drawing.Color.Black;
-            this.Game.Location = new System.Drawing.Point(0, 0);
-            this.Game.Name = "Game";
-            this.Game.Size = new System.Drawing.Size(1232, 666);
-            this.Game.TabIndex = 0;
-            this.Game.Visible = false;
             // 
             // PongForm
             // 
@@ -254,7 +242,6 @@ namespace Pong
             this.panelLobby.ResumeLayout(false);
             this.panelLobby.PerformLayout();
             this.panelAcceptDuel.ResumeLayout(false);
-            this.panelGame.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
