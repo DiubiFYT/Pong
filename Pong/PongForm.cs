@@ -23,10 +23,10 @@ namespace Pong
     {
         private Random r = new Random();
 
-        readonly public static int defaultPort = 5000;
+        readonly public static int defaultPort = 50000;
 
-        private TcpListener tcpListener = null;
-        private TcpClient tcpClient;
+        private UdpClient udpClient;
+        private UdpClient listener;
 
         public PongForm()
         {
@@ -73,13 +73,11 @@ namespace Pong
 
                 IPEndPoint endPoint = new IPEndPoint(enemyIP, defaultPort);
 
-                tcpClient = new TcpClient();
-                tcpClient.Connect(endPoint);
-
-                Stream stm = tcpClient.GetStream();
+                udpClient = new UdpClient();
+                udpClient.Connect(endPoint);
 
                 byte[] data = myIP.GetAddressBytes();
-                stm.Write(data, 0, data.Length);
+                udpClient.Send(data, data.Length);
             }
             catch (Exception exc)
             {
@@ -121,16 +119,16 @@ namespace Pong
 
         private void ListenForRequests()
         {
-            tcpListener = new TcpListener(IPAddress.Any, defaultPort);
-            tcpListener.Start();
-            Socket sock = tcpListener.AcceptSocket();
+            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, defaultPort);
+            listener = new UdpClient(defaultPort);
 
             byte[] bytes = new byte[20];
-            int k = sock.Receive(bytes);
+            bytes = listener.Receive(ref endPoint);
 
             if (Encoding.ASCII.GetString(bytes).Contains("Accept match"))
             {
                 Game.isHost = true;
+                Game.enemyIP = IPAddress.Parse(txBxEnemyIP.Text);
 
                 Invoke(new Action(() =>
                 {
@@ -141,7 +139,7 @@ namespace Pong
             }
             else
             {
-                for (int i = 0; i < k; i++)
+                for (int i = 0; i < bytes.Length; i++)
                 {
                     if (i != 3)
                     {
@@ -161,26 +159,31 @@ namespace Pong
 
                 Game.isHost = true;
             }
-            sock.Close();
-            tcpListener.Stop();
+            listener.Close();
         }
 
         private void btnAcceptDuel_Click(object sender, EventArgs e)
         {
-            if (tcpClient == null || !tcpClient.Connected)
+            IPAddress enemyIP = IPAddress.Parse(lblIPEnemyDuel.Text.Split(' ')[0]);
+
+            if (udpClient == null || !udpClient.Client.Connected)
             {
-                tcpClient = new TcpClient();
-                IPAddress enemyIP = IPAddress.Parse(lblIPEnemyDuel.Text.Split(' ')[0]);
-                tcpClient.Connect(enemyIP, defaultPort);
+                udpClient = new UdpClient(); 
+                udpClient.Connect(enemyIP, defaultPort);
             }
 
-            Stream stm = tcpClient.GetStream();
+            if (udpClient.Client.Connected)
+            {
+                udpClient.Close();
+                udpClient.Connect(enemyIP, defaultPort);
+            }
 
             byte[] response = Encoding.ASCII.GetBytes("Accept match");
 
-            stm.Write(response, 0, response.Length);
+            udpClient.Send(response, response.Length);
 
             Game.isHost = false;
+            Game.enemyIP = enemyIP;
 
             panelGame.Visible = true;
             Game.Visible = true;

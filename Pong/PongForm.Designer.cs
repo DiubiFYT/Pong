@@ -65,7 +65,7 @@ namespace Pong
             this.panelLobby.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelLobby.Location = new System.Drawing.Point(0, 0);
             this.panelLobby.Name = "panelLobby";
-            this.panelLobby.Size = new System.Drawing.Size(1232, 666);
+            this.panelLobby.Size = new System.Drawing.Size(1232, 768);
             this.panelLobby.TabIndex = 0;
             // 
             // panelAcceptDuel
@@ -226,7 +226,7 @@ namespace Pong
             this.panelGame.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelGame.Location = new System.Drawing.Point(0, 0);
             this.panelGame.Name = "panelGame";
-            this.panelGame.Size = new System.Drawing.Size(1232, 666);
+            this.panelGame.Size = new System.Drawing.Size(1232, 768);
             this.panelGame.TabIndex = 1;
             this.panelGame.Visible = false;
             // 
@@ -275,7 +275,6 @@ namespace Pong
         private System.Windows.Forms.Panel panelAcceptDuel;
         private System.Windows.Forms.Button btnAcceptDuel;
         private System.Windows.Forms.Label lblIPEnemyDuel;
-        private Game game1;
         private Game Game;
     }
 }
