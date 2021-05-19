@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Open.Nat;
 
 namespace Pong
 {
@@ -23,10 +24,13 @@ namespace Pong
     {
         private Random r = new Random();
 
-        readonly public static int defaultPort = 42069;
+        readonly public static int defaultPort = 52000;
 
         private UdpClient udpClient;
         private UdpClient listener;
+
+        private NatDevice device;
+        private Mapping mapping;
 
         public PongForm()
         {
@@ -54,6 +58,12 @@ namespace Pong
         {
             ApplyPixeledFont();
 
+            NatDiscoverer discoverer = new();
+            CancellationTokenSource cts = new CancellationTokenSource(10000);
+            device = await discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts);
+            mapping = new Mapping(Protocol.Udp, defaultPort, defaultPort, "Open ports");
+            await device.CreatePortMapAsync(mapping);
+
             lblPrivateIP.Text = "Private IP: " + Methods.GetPrivateIP();
             lblPublicIP.Text = "Public IP: " + Methods.GetPublicIP();
 
@@ -69,16 +79,20 @@ namespace Pong
                 ApplyPixeledFont();
 
                 IPAddress enemyIP = IPAddress.Parse(txBxEnemyIP.Text);
-                IPAddress myIP = IPAddress.Parse(Methods.GetPrivateIP());
+                IPAddress myIP = IPAddress.Parse(Methods.GetPublicIP());
 
                 IPEndPoint endPoint = new IPEndPoint(enemyIP, defaultPort);
 
                 udpClient = new UdpClient();
+                udpClient.AllowNatTraversal(true);
+                udpClient.Client.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
+                udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 udpClient.Connect(endPoint);
 
                 byte[] data = myIP.GetAddressBytes();
                 udpClient.Send(data, data.Length);
                 udpClient.Close();
+                udpClient.Dispose();
             }
             catch (Exception exc)
             {
@@ -122,12 +136,18 @@ namespace Pong
         {
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, defaultPort);
             listener = new UdpClient(defaultPort);
+            listener.AllowNatTraversal(true);
+            listener.Client.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
+            listener.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
             byte[] bytes = new byte[20];
             bytes = listener.Receive(ref endPoint);
 
             if (Encoding.ASCII.GetString(bytes).Contains("Accept match"))
             {
+                listener.Close();
+                listener.Dispose();
+
                 Game.isHost = true;
                 Game.enemyIP = IPAddress.Parse(txBxEnemyIP.Text);
 
@@ -164,6 +184,7 @@ namespace Pong
                 Game.isHost = true;
             }
             listener.Close();
+            listener.Dispose();
         }
 
         private void btnAcceptDuel_Click(object sender, EventArgs e)
@@ -173,6 +194,9 @@ namespace Pong
             if (udpClient == null || !udpClient.Client.Connected)
             {
                 udpClient = new UdpClient();
+                udpClient.AllowNatTraversal(true);
+                udpClient.Client.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
+                udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 udpClient.Connect(enemyIP, defaultPort);
             }
 
@@ -184,6 +208,7 @@ namespace Pong
             Game.enemyIP = enemyIP;
 
             udpClient.Close();
+            udpClient.Dispose();
 
             Game game = new Game();
 
@@ -195,6 +220,7 @@ namespace Pong
 
         private void PongForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            device.DeletePortMapAsync(mapping);
             Application.Exit();
         }
     }

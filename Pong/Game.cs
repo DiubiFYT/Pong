@@ -4,7 +4,9 @@ using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using Open.Nat;
 
 namespace Pong
 {
@@ -24,20 +26,21 @@ namespace Pong
             Interval = 10
         };
 
-        IPEndPoint AnyIP = new IPEndPoint(IPAddress.Any, PongForm.defaultPort);
         IPEndPoint iPEndPoint;
 
         private int ballSpeedY = 0;
-        private int ballSpeedX = -10;
-        private int ballSpeedYIncrement = 4;
+        private int ballSpeedX = -12;
+        private int ballSpeedYIncrement = 6;
         //private int ballSpeedXIncrement = 4;
 
         private int playerSpeed = 5;
 
+
         public bool isGoingDown;
         public bool isGoingUp;
 
-        private UdpClient udpClient;
+        private UdpClient senderUdpClient;
+        private UdpClient receiverUdpClient;
 
         public Game()
         {
@@ -51,8 +54,16 @@ namespace Pong
 
             iPEndPoint = new IPEndPoint(enemyIP, PongForm.defaultPort);
 
-            udpClient = new UdpClient(PongForm.defaultPort);
-            udpClient.Connect(iPEndPoint);
+            receiverUdpClient = new UdpClient(PongForm.defaultPort);
+            receiverUdpClient.AllowNatTraversal(true);
+            receiverUdpClient.Client.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
+            receiverUdpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
+            senderUdpClient = new UdpClient();
+            senderUdpClient.AllowNatTraversal(true);
+            senderUdpClient.Client.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
+            senderUdpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            senderUdpClient.Connect(iPEndPoint);
 
             if (isHost)
             {
@@ -61,14 +72,15 @@ namespace Pong
             }
             else
             {
-                timerHost.Enabled = false;
                 timerGuest.Enabled = true;
+                timerHost.Enabled = false;
             }
         }
 
         private void TimerHost_Tick(object sender, EventArgs e)
         {
             SendHostData();
+            ReceiveGuestData();
 
             Ball.Left += ballSpeedX;
             Ball.Top += ballSpeedY;
@@ -96,7 +108,7 @@ namespace Pong
             if (Ball.Right > Bounds.Right || Ball.Left < Bounds.Left)
             {
                 Ball.Location = new Point((Width / 2) - (Ball.Width / 2), (Height / 2) - (Ball.Height / 2));
-                ballSpeedX = -10;
+                ballSpeedX = -12;
                 ballSpeedY = 0;
             }
 
@@ -127,54 +139,54 @@ namespace Pong
             {
                 Player1.Location = new Point(Player1.Location.X, BottomBorder.Top - Player1.Height);
             }
-
-            Player2.Location = new Point(Player2.Location.X, Ball.Location.Y);
-
-            if (Player2.Top < TopBorder.Bottom)
-            {
-                Player2.Top = TopBorder.Bottom;
-            }
-
-            if (Player2.Bottom > BottomBorder.Top)
-            {
-                Player2.Location = new Point(Player2.Location.X, BottomBorder.Top - Player1.Height);
-            }
-
-            ReceiveGuestData();
         }
 
         private void TimerGuest_Tick(object sender, EventArgs e)
         {
-
+            SendGuestData();
             ReceiveHostData();
-
-            Ball.Left += ballSpeedX;
-            Ball.Top += ballSpeedY;
 
             if (isGoingUp)
             {
-                Player1.Top -= 5;
+                Player1.Top -= playerSpeed;
             }
 
             if (isGoingDown)
             {
-                Player1.Top += 5;
+                Player1.Top += playerSpeed;
             }
 
-            SendGuestData();
+            if (Player1.Top < TopBorder.Bottom)
+            {
+                Player1.Top = TopBorder.Bottom;
+            }
+
+            if (Player1.Bottom > BottomBorder.Top)
+            {
+                Player1.Location = new Point(Player1.Location.X, BottomBorder.Top - Player1.Height);
+            }
         }
 
         private void SendHostData() //Sent from host
         {
+            PlayerData playerData = new PlayerData();
+            playerData.Position = Player1.Location;
+
+            string serialized = JsonConvert.SerializeObject(playerData);
+            byte[] serializedData = Encoding.ASCII.GetBytes(serialized);
+
+            senderUdpClient.Send(serializedData, serializedData.Length);
+
             BallData ballData = new BallData();
             ballData.ballSpeedX = ballSpeedX;
             ballData.ballSpeedY = ballSpeedY;
             ballData.Location = Ball.Location;
+            ballData.Left = Ball.Left;
 
-            string serialized = JsonConvert.SerializeObject(ballData);
-            byte[] serializedData = Encoding.ASCII.GetBytes(serialized);
+            serialized = JsonConvert.SerializeObject(ballData);
+            serializedData = Encoding.ASCII.GetBytes(serialized);
 
-            udpClient.Send(serializedData, serializedData.Length);
+            senderUdpClient.Send(serializedData, serializedData.Length);
         }
 
         private void SendGuestData() //Sent from guest
@@ -185,26 +197,25 @@ namespace Pong
             string serialized = JsonConvert.SerializeObject(playerData);
             byte[] serializedData = Encoding.ASCII.GetBytes(serialized);
 
-            udpClient.Send(serializedData, serializedData.Length);
+            senderUdpClient.Send(serializedData, serializedData.Length);
         }
 
         private void ReceiveGuestData() //Received by host
         {
-            PlayerData playerData = JsonConvert.DeserializeObject<PlayerData>(Encoding.ASCII.GetString(udpClient.Receive(ref iPEndPoint)));
+            PlayerData playerData = JsonConvert.DeserializeObject<PlayerData>(Encoding.ASCII.GetString(receiverUdpClient.Receive(ref iPEndPoint)));
 
-            Player2.Location = playerData.Position;
+            Player2.Location = new Point(Player2.Location.X, playerData.Position.Y);
         }
 
         private void ReceiveHostData() //Received by guest
         {
-            BallData ballData = JsonConvert.DeserializeObject<BallData>(Encoding.ASCII.GetString(udpClient.Receive(ref iPEndPoint)));
+            PlayerData playerData = JsonConvert.DeserializeObject<PlayerData>(Encoding.ASCII.GetString(receiverUdpClient.Receive(ref iPEndPoint)));
 
-            ballSpeedX = -ballData.ballSpeedX;
-            ballSpeedY = ballData.ballSpeedY;
-        }
+            Player2.Location = new Point(Player2.Location.X, playerData.Position.Y);
 
-        private void StartGame()
-        {
+            BallData ballData = JsonConvert.DeserializeObject<BallData>(Encoding.ASCII.GetString(receiverUdpClient.Receive(ref iPEndPoint)));
+            
+            Ball.Location = new Point(Width - (ballData.Left + Ball.Width), ballData.Location.Y);
         }
 
         private void Game_KeyDown(object sender, KeyEventArgs e)
@@ -215,10 +226,6 @@ namespace Pong
                 {
                     isGoingUp = true;
                 }
-                else
-                {
-                    isGoingUp = false;
-                }
             }
 
             if (e.KeyCode == Keys.S)
@@ -227,12 +234,9 @@ namespace Pong
                 {
                     isGoingDown = true;
                 }
-                else
-                {
-                    isGoingDown = false;
-                }
             }
         }
+
 
         private void Game_KeyUp(object sender, KeyEventArgs e)
         {
@@ -252,6 +256,7 @@ namespace Pong
             public int ballSpeedY;
             public int ballSpeedX;
             public Point Location;
+            public int Left;
         }
 
         public struct PlayerData

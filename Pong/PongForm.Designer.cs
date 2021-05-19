@@ -262,7 +262,6 @@ namespace Pong
         private System.Windows.Forms.Panel panelAcceptDuel;
         private System.Windows.Forms.Button btnAcceptDuel;
         private System.Windows.Forms.Label lblIPEnemyDuel;
-        private Game Game;
     }
 }
 
