@@ -26,9 +26,18 @@ namespace Pong
 
         internal static string GetPublicIP()
         {
-            string externalIpString = new WebClient().DownloadString("http://icanhazip.com").Replace("\\r\\n", "").Replace("\\n", "").Trim();
+            try
+            {
+                string externalIpString = new WebClient().DownloadString("http://icanhazip.com").Replace("\\r\\n", "").Replace("\\n", "").Trim();
 
-            return externalIpString;
+                return externalIpString;
+            }
+            catch(Exception e)
+            {
+                Notification notification = new Notification();
+                notification.Show(e.Message, Notification.enmType.Error);
+                return null;
+            }
         }
     }
 }
