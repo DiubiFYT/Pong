@@ -39,12 +39,12 @@ namespace Pong
             this.lblLoginPsw = new System.Windows.Forms.Label();
             this.panelMainMenu = new System.Windows.Forms.Panel();
             this.panelMenu = new System.Windows.Forms.Panel();
-            this.pxBxBackPanelMenu = new System.Windows.Forms.PictureBox();
             this.btnLogin = new System.Windows.Forms.Button();
-            this.llblLogOut = new System.Windows.Forms.LinkLabel();
             this.btnCreateAccount = new System.Windows.Forms.Button();
+            this.pxBxBackPanelMenu = new System.Windows.Forms.PictureBox();
+            this.llblLogOut = new System.Windows.Forms.LinkLabel();
             this.lblCurrentUserNickname = new System.Windows.Forms.Label();
-            this.txBxEnemyIP = new System.Windows.Forms.TextBox();
+            this.txBxEnemyNickname = new System.Windows.Forms.TextBox();
             this.lblTitle = new System.Windows.Forms.Label();
             this.panelAcceptDuel = new System.Windows.Forms.Panel();
             this.btnAcceptDuel = new System.Windows.Forms.Button();
@@ -160,7 +160,7 @@ namespace Pong
             // panelMainMenu
             // 
             this.panelMainMenu.Controls.Add(this.panelMenu);
-            this.panelMainMenu.Controls.Add(this.txBxEnemyIP);
+            this.panelMainMenu.Controls.Add(this.txBxEnemyNickname);
             this.panelMainMenu.Controls.Add(this.lblTitle);
             this.panelMainMenu.Controls.Add(this.panelAcceptDuel);
             this.panelMainMenu.Controls.Add(this.lblEnemyIP);
@@ -178,18 +178,43 @@ namespace Pong
             // panelMenu
             // 
             this.panelMenu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(17)))), ((int)(((byte)(17)))), ((int)(((byte)(17)))));
-            this.panelMenu.Controls.Add(this.pxBxBackPanelMenu);
             this.panelMenu.Controls.Add(this.btnLogin);
-            this.panelMenu.Controls.Add(this.llblLogOut);
             this.panelMenu.Controls.Add(this.btnCreateAccount);
+            this.panelMenu.Controls.Add(this.pxBxBackPanelMenu);
+            this.panelMenu.Controls.Add(this.llblLogOut);
             this.panelMenu.Controls.Add(this.lblCurrentUserNickname);
             this.panelMenu.Location = new System.Drawing.Point(974, 0);
             this.panelMenu.Name = "panelMenu";
             this.panelMenu.Size = new System.Drawing.Size(258, 666);
-            this.panelMenu.TabIndex = 10;
+            this.panelMenu.TabIndex = 11;
             this.panelMenu.Tag = "noCenter";
             this.panelMenu.Visible = false;
-            this.panelMenu.Paint += new System.Windows.Forms.PaintEventHandler(this.panelMenu_Paint);
+            // 
+            // btnLogin
+            // 
+            this.btnLogin.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnLogin.BackColor = System.Drawing.Color.Green;
+            this.btnLogin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLogin.Location = new System.Drawing.Point(10, 60);
+            this.btnLogin.Name = "btnLogin";
+            this.btnLogin.Size = new System.Drawing.Size(236, 64);
+            this.btnLogin.TabIndex = 7;
+            this.btnLogin.Tag = "noCenter";
+            this.btnLogin.Text = "Login";
+            this.btnLogin.UseVisualStyleBackColor = false;
+            // 
+            // btnCreateAccount
+            // 
+            this.btnCreateAccount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCreateAccount.BackColor = System.Drawing.Color.LightSeaGreen;
+            this.btnCreateAccount.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnCreateAccount.Location = new System.Drawing.Point(10, 123);
+            this.btnCreateAccount.Name = "btnCreateAccount";
+            this.btnCreateAccount.Size = new System.Drawing.Size(236, 64);
+            this.btnCreateAccount.TabIndex = 8;
+            this.btnCreateAccount.Tag = "noCenter";
+            this.btnCreateAccount.Text = "Create an account";
+            this.btnCreateAccount.UseVisualStyleBackColor = false;
             // 
             // pxBxBackPanelMenu
             // 
@@ -202,20 +227,6 @@ namespace Pong
             this.pxBxBackPanelMenu.TabStop = false;
             this.pxBxBackPanelMenu.Tag = "noCenter";
             this.pxBxBackPanelMenu.Click += new System.EventHandler(this.pxBxBackPanelMenu_Click);
-            // 
-            // btnLogin
-            // 
-            this.btnLogin.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnLogin.BackColor = System.Drawing.Color.Green;
-            this.btnLogin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnLogin.Location = new System.Drawing.Point(10, 57);
-            this.btnLogin.Name = "btnLogin";
-            this.btnLogin.Size = new System.Drawing.Size(236, 64);
-            this.btnLogin.TabIndex = 5;
-            this.btnLogin.Tag = "noCenter";
-            this.btnLogin.Text = "Login";
-            this.btnLogin.UseVisualStyleBackColor = false;
-            this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
             // 
             // llblLogOut
             // 
@@ -230,20 +241,6 @@ namespace Pong
             this.llblLogOut.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.llblLogOut.Visible = false;
             this.llblLogOut.VisitedLinkColor = System.Drawing.Color.Red;
-            this.llblLogOut.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.llblLogOut_LinkClicked);
-            // 
-            // btnCreateAccount
-            // 
-            this.btnCreateAccount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCreateAccount.BackColor = System.Drawing.Color.LightSeaGreen;
-            this.btnCreateAccount.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCreateAccount.Location = new System.Drawing.Point(10, 120);
-            this.btnCreateAccount.Name = "btnCreateAccount";
-            this.btnCreateAccount.Size = new System.Drawing.Size(236, 64);
-            this.btnCreateAccount.TabIndex = 6;
-            this.btnCreateAccount.Tag = "noCenter";
-            this.btnCreateAccount.Text = "Create an account";
-            this.btnCreateAccount.UseVisualStyleBackColor = false;
             // 
             // lblCurrentUserNickname
             // 
@@ -256,16 +253,15 @@ namespace Pong
             this.lblCurrentUserNickname.Text = "currentUser.Nickname";
             this.lblCurrentUserNickname.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.lblCurrentUserNickname.Visible = false;
-            this.lblCurrentUserNickname.Click += new System.EventHandler(this.lblCurrentUserNickname_Click_1);
             // 
-            // txBxEnemyIP
+            // txBxEnemyNickname
             // 
-            this.txBxEnemyIP.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.txBxEnemyIP.Location = new System.Drawing.Point(418, 332);
-            this.txBxEnemyIP.Name = "txBxEnemyIP";
-            this.txBxEnemyIP.Size = new System.Drawing.Size(432, 29);
-            this.txBxEnemyIP.TabIndex = 2;
-            this.txBxEnemyIP.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txBxEnemyNickname.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.txBxEnemyNickname.Location = new System.Drawing.Point(418, 332);
+            this.txBxEnemyNickname.Name = "txBxEnemyNickname";
+            this.txBxEnemyNickname.Size = new System.Drawing.Size(432, 29);
+            this.txBxEnemyNickname.TabIndex = 2;
+            this.txBxEnemyNickname.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // lblTitle
             // 
@@ -453,7 +449,7 @@ namespace Pong
         private System.Windows.Forms.TextBox txBxLoginNickname;
         private System.Windows.Forms.Label lblLoginPsw;
         private System.Windows.Forms.Panel panelMainMenu;
-        private System.Windows.Forms.TextBox txBxEnemyIP;
+        private System.Windows.Forms.TextBox txBxEnemyNickname;
         private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.Panel panelAcceptDuel;
         private System.Windows.Forms.Button btnAcceptDuel;
@@ -463,15 +459,15 @@ namespace Pong
         private System.Windows.Forms.Button btnMatch;
         private System.Windows.Forms.Label lblPrivateIP;
         private System.Windows.Forms.Label lblConnecting;
-        private System.Windows.Forms.Button btnLogin;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Panel panelLobby;
-        private System.Windows.Forms.Panel panelMenu;
-        private System.Windows.Forms.LinkLabel llblLogOut;
-        private System.Windows.Forms.Button btnCreateAccount;
-        private System.Windows.Forms.Label lblCurrentUserNickname;
         private System.Windows.Forms.PictureBox pxBxHamburgerMenu;
+        private System.Windows.Forms.Panel panelMenu;
+        private System.Windows.Forms.Button btnLogin;
+        private System.Windows.Forms.Button btnCreateAccount;
         private System.Windows.Forms.PictureBox pxBxBackPanelMenu;
+        private System.Windows.Forms.LinkLabel llblLogOut;
+        private System.Windows.Forms.Label lblCurrentUserNickname;
     }
 }
 

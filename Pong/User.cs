@@ -14,9 +14,14 @@ namespace Pong
         internal string Password { get; private set; }
         [JsonProperty]
         internal string IP { get; private set; }
+        [JsonProperty]
+        internal string LANIP { get; private set; }
 
         [JsonProperty]
         public static User currentUser { get; private set; }
+
+        [JsonProperty]
+        public static User enemyUser { get; set; }
 
         public User()
         {
@@ -30,18 +35,19 @@ namespace Pong
                 currentUser.Nickname = nickname;
                 currentUser.Password = password;
                 currentUser.IP = Methods.GetPublicIP();
+                currentUser.LANIP = Methods.GetPrivateIP();
                 SendJSON();
             }
         }
 
-        private bool RetrieveAccountFile(string nickname)
+        public static bool RetrieveAccountFile(string nickname)
         {
             Notification notification = new Notification();
 
             try
             {
                 WebClient client = new WebClient();
-                client.DownloadFile("https://pongsignup.ddns.net/accounts/" + nickname + ".json", AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
+                client.DownloadFile("http://172.22.20.170:3000/accounts/" + nickname + ".json", AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
                 return true;
             }
             catch (Exception e)
@@ -98,7 +104,7 @@ namespace Pong
                 StreamWriter sw = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
                 sw.Write(userData);
 
-                File.Replace(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json", "https://pongsignup.ddns.net/accounts/" + currentUser.Nickname + ".json", null);
+                File.Replace(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json", "http://172.22.20.170:3000/accounts/" + currentUser.Nickname + ".json", null);
 
                 File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
             }

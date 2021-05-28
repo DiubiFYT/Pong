@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace Pong
 {
@@ -66,13 +68,13 @@ namespace Pong
             CancellationTokenSource cts = new CancellationTokenSource(10000);
             try
             {
-                device = await discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts);
+                device = await discoverer.DiscoverDeviceAsync(PortMapper.Pmp, cts);
                 mapping = new Mapping(Protocol.Udp, defaultPort, defaultPort, "Open ports");
                 await device.CreatePortMapAsync(mapping);
             }
-            catch(Exception exc)
+            catch
             {
-                notification.Show(exc.Message, Notification.enmType.Warning);
+                notification.Show("Unable to open ports on the router. The game will work only in LAN.", Notification.enmType.Warning);
             }
 
             lblPrivateIP.Text = "Private IP: " + Methods.GetPrivateIP();
@@ -88,11 +90,57 @@ namespace Pong
                 SwitchConnectionLabelStyle(ConnectionLabelStyle.Connecting);
                 lblConnecting.Visible = true;
                 ApplyPixeledFont();
+              
+                User.RetrieveAccountFile(txBxEnemyNickname.Text.Trim());
 
-                IPAddress enemyIP = IPAddress.Parse(txBxEnemyIP.Text);
-                IPAddress myIP = IPAddress.Parse(Methods.GetPublicIP());
+                User.enemyUser = JsonConvert.DeserializeObject<User>(File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json"));
+
+                File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
+
+                string IPClass = GetIPClass(Methods.GetPrivateIP());
+                string IPEnemyClass = GetIPClass(User.enemyUser.LANIP);
+
+                IPAddress myIP = null;
+                IPAddress enemyIP = null;
+
+                if(IPClass == IPEnemyClass)
+                {
+                    if(IPClass == "Class A")
+                    {
+                        myIP = IPAddress.Parse(Methods.GetPrivateIP());
+                        enemyIP = IPAddress.Parse(User.enemyUser.LANIP);
+                    }
+                    else if (IPClass == "Class B")
+                    {
+                        if(Methods.GetPrivateIP().Split('.')[1] == User.enemyUser.LANIP.Split('.')[1])
+                        {
+                            myIP = IPAddress.Parse(Methods.GetPrivateIP());
+                            enemyIP = IPAddress.Parse(User.enemyUser.LANIP);
+                        }
+                    }
+                    else if(IPClass == "Class C")
+                    {
+                        if (Methods.GetPrivateIP().Split('.')[1] == User.enemyUser.LANIP.Split('.')[1] && Methods.GetPrivateIP().Split('.')[2] == User.enemyUser.LANIP.Split('.')[2])
+                        {
+                            myIP = IPAddress.Parse(Methods.GetPrivateIP());
+                            enemyIP = IPAddress.Parse(User.enemyUser.LANIP);
+                        }
+                    }
+                    else
+                    {
+                        myIP = IPAddress.Parse(Methods.GetPublicIP());
+                        enemyIP = IPAddress.Parse(User.enemyUser.IP);
+                    }
+                }
+                else
+                {
+                    myIP = IPAddress.Parse(Methods.GetPublicIP());
+                    enemyIP = IPAddress.Parse(User.enemyUser.IP);
+                }
 
                 IPEndPoint endPoint = new IPEndPoint(enemyIP, defaultPort);
+
+                User.enemyUser = null; //TODO: Check if it is needed in the future.
 
                 udpClient = new UdpClient();
                 udpClient.AllowNatTraversal(true);
@@ -160,7 +208,7 @@ namespace Pong
                 listener.Dispose();
 
                 Game.isHost = true;
-                Game.enemyIP = IPAddress.Parse(txBxEnemyIP.Text);
+                Game.enemyIP = IPAddress.Parse(txBxEnemyNickname.Text);
 
                 Game game = new Game();
 
@@ -231,7 +279,10 @@ namespace Pong
 
         private void PongForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            device.DeletePortMapAsync(mapping);
+            if(device != null)
+            {
+                device.DeletePortMapAsync(mapping);
+            }
             Application.Exit();
         }
 
@@ -329,6 +380,32 @@ namespace Pong
         private void panelMainMenu_Paint(object sender, PaintEventArgs e)
         {
 
+        }
+
+        private string GetIPClass(string ip)
+        {
+            string privateIP = Methods.GetPrivateIP();
+
+            string[] splittedIP = privateIP.Split('.');
+            
+            if(int.Parse(splittedIP[0]) >= 1 && int.Parse(splittedIP[0]) <= 127)
+            {
+                return "Class A";
+            }
+            else if(int.Parse(splittedIP[0]) >= 128 && int.Parse(splittedIP[0]) <= 191)
+            {
+                return "Class B";
+            }
+            else if(int.Parse(splittedIP[0]) >= 192 && int.Parse(splittedIP[0]) <= 223)
+            {
+                return "Class C";
+            }
+            else
+            {
+                Notification notification = new Notification();
+                notification.Show("Not a valid IP Address", Notification.enmType.Warning);
+                return null;
+            }
         }
     }
 }
