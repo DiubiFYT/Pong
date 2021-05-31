@@ -2,7 +2,6 @@
 using System;
 using System.IO;
 using System.Net;
-using System.Net.Http;
 
 namespace Pong
 {
@@ -10,27 +9,29 @@ namespace Pong
     {
         [JsonProperty]
         internal string Nickname { get; private set; }
+
         [JsonProperty]
         internal string Password { get; private set; }
+
         [JsonProperty]
         internal string IP { get; private set; }
+
         [JsonProperty]
         internal string LANIP { get; private set; }
 
         [JsonProperty]
         public static User currentUser { get; private set; }
 
-        [JsonProperty]
-        public static User enemyUser { get; set; }
+        //[JsonProperty]
+        //public static User enemyUser { get; set; }
 
         public User()
         {
-
         }
 
         public User(string nickname, string password)
         {
-            if(Authenticate(nickname, password))
+            if (Authenticate(nickname, password))
             {
                 currentUser.Nickname = nickname;
                 currentUser.Password = password;
@@ -47,12 +48,12 @@ namespace Pong
             try
             {
                 WebClient client = new WebClient();
-                client.DownloadFile("http://172.22.20.170:3000/accounts/" + nickname + ".json", AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
+                client.DownloadFile("https://pongsignup.ddns.net/accounts/" + nickname + ".json", AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
                 return true;
             }
-            catch (Exception e)
+            catch
             {
-                notification.Show(e.Message, Notification.enmType.Error);
+                notification.Show("Account not found.", Notification.enmType.Error);
                 return false;
             }
         }
@@ -100,18 +101,39 @@ namespace Pong
                 {
                     PreserveReferencesHandling = PreserveReferencesHandling.Objects
                 });
-                    
+
                 StreamWriter sw = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
                 sw.Write(userData);
+                sw.Close();
 
-                File.Replace(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json", "http://172.22.20.170:3000/accounts/" + currentUser.Nickname + ".json", null);
-
-                File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
+            Replace:
+                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json"))
+                {
+                    WebClient wc = new WebClient();
+                    File.Move(AppDomain.CurrentDomain.BaseDirectory + @"\\currentAccount.json", AppDomain.CurrentDomain.BaseDirectory + @"\\" + currentUser.Nickname + ".json");
+                    byte[] ciao = wc.UploadFile("https://pongsignup.ddns.net/update", AppDomain.CurrentDomain.BaseDirectory + "\\" + currentUser.Nickname + ".json");
+                    File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\" + currentUser.Nickname + ".json");
+                }
+                else
+                {
+                    RetrieveAccountFile(currentUser.Nickname);
+                    goto Replace;
+                }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Notification notification = new Notification();
-                File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
+
+                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json"))
+                {
+                    File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
+                }
+
+                if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\" + currentUser.Nickname + ".json"))
+                {
+                    File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\" + currentUser.Nickname + ".json");
+                }
+
                 notification.Show(e.Message, Notification.enmType.Error);
             }
         }

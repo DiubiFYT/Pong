@@ -28,9 +28,9 @@ namespace Pong
         {
             try
             {
-                string externalIpString = new WebClient().DownloadString("http://icanhazip.com").Replace("\\r\\n", "").Replace("\\n", "").Trim();
+                string pubIp = new WebClient().DownloadString("https://api.ipify.org");
 
-                return externalIpString;
+                return pubIp;
             }
             catch(Exception e)
             {

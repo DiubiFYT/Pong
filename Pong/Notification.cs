@@ -136,6 +136,7 @@ namespace Pong
 
         internal void Show(string msg, enmType type)
         {
+            lblMsg.Font = new Font(PongForm.pfc.Families[0], lblMsg.Font.Size - 6);
             TopMost = true;
 
             this.TopMost = true;

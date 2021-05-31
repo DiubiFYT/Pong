@@ -38,6 +38,7 @@ namespace Pong
             this.txBxLoginNickname = new System.Windows.Forms.TextBox();
             this.lblLoginPsw = new System.Windows.Forms.Label();
             this.panelMainMenu = new System.Windows.Forms.Panel();
+            this.btnMatchLAN = new System.Windows.Forms.Button();
             this.panelMenu = new System.Windows.Forms.Panel();
             this.btnLogin = new System.Windows.Forms.Button();
             this.btnCreateAccount = new System.Windows.Forms.Button();
@@ -47,11 +48,12 @@ namespace Pong
             this.txBxEnemyNickname = new System.Windows.Forms.TextBox();
             this.lblTitle = new System.Windows.Forms.Label();
             this.panelAcceptDuel = new System.Windows.Forms.Panel();
+            this.btnRefuseDuel = new System.Windows.Forms.Button();
             this.btnAcceptDuel = new System.Windows.Forms.Button();
             this.lblIPEnemyDuel = new System.Windows.Forms.Label();
             this.lblEnemyIP = new System.Windows.Forms.Label();
             this.lblPublicIP = new System.Windows.Forms.Label();
-            this.btnMatch = new System.Windows.Forms.Button();
+            this.btnMatchOnline = new System.Windows.Forms.Button();
             this.lblPrivateIP = new System.Windows.Forms.Label();
             this.lblConnecting = new System.Windows.Forms.Label();
             this.pxBxHamburgerMenu = new System.Windows.Forms.PictureBox();
@@ -92,6 +94,7 @@ namespace Pong
             this.panelLogin.TabIndex = 16;
             this.panelLogin.Tag = "noCenter";
             this.panelLogin.Visible = false;
+            this.panelLogin.Paint += new System.Windows.Forms.PaintEventHandler(this.panelLogin_Paint);
             // 
             // pxBxLoginBack
             // 
@@ -159,21 +162,37 @@ namespace Pong
             // 
             // panelMainMenu
             // 
+            this.panelMainMenu.Controls.Add(this.btnMatchLAN);
             this.panelMainMenu.Controls.Add(this.panelMenu);
             this.panelMainMenu.Controls.Add(this.txBxEnemyNickname);
             this.panelMainMenu.Controls.Add(this.lblTitle);
             this.panelMainMenu.Controls.Add(this.panelAcceptDuel);
             this.panelMainMenu.Controls.Add(this.lblEnemyIP);
             this.panelMainMenu.Controls.Add(this.lblPublicIP);
-            this.panelMainMenu.Controls.Add(this.btnMatch);
+            this.panelMainMenu.Controls.Add(this.btnMatchOnline);
             this.panelMainMenu.Controls.Add(this.lblPrivateIP);
             this.panelMainMenu.Controls.Add(this.lblConnecting);
             this.panelMainMenu.Controls.Add(this.pxBxHamburgerMenu);
+            this.panelMainMenu.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelMainMenu.Location = new System.Drawing.Point(0, 0);
             this.panelMainMenu.Name = "panelMainMenu";
             this.panelMainMenu.Size = new System.Drawing.Size(1232, 666);
             this.panelMainMenu.TabIndex = 17;
             this.panelMainMenu.Paint += new System.Windows.Forms.PaintEventHandler(this.panelMainMenu_Paint);
+            // 
+            // btnMatchLAN
+            // 
+            this.btnMatchLAN.BackColor = System.Drawing.Color.White;
+            this.btnMatchLAN.Enabled = false;
+            this.btnMatchLAN.ForeColor = System.Drawing.Color.Black;
+            this.btnMatchLAN.Location = new System.Drawing.Point(612, 403);
+            this.btnMatchLAN.Name = "btnMatchLAN";
+            this.btnMatchLAN.Size = new System.Drawing.Size(219, 50);
+            this.btnMatchLAN.TabIndex = 12;
+            this.btnMatchLAN.Tag = "noCenter";
+            this.btnMatchLAN.Text = "Search in LAN";
+            this.btnMatchLAN.UseVisualStyleBackColor = false;
+            this.btnMatchLAN.Click += new System.EventHandler(this.btnMatchLAN_Click);
             // 
             // panelMenu
             // 
@@ -202,6 +221,7 @@ namespace Pong
             this.btnLogin.Tag = "noCenter";
             this.btnLogin.Text = "Login";
             this.btnLogin.UseVisualStyleBackColor = false;
+            this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
             // 
             // btnCreateAccount
             // 
@@ -215,6 +235,7 @@ namespace Pong
             this.btnCreateAccount.Tag = "noCenter";
             this.btnCreateAccount.Text = "Create an account";
             this.btnCreateAccount.UseVisualStyleBackColor = false;
+            this.btnCreateAccount.Click += new System.EventHandler(this.btnCreateAccount_Click);
             // 
             // pxBxBackPanelMenu
             // 
@@ -241,6 +262,7 @@ namespace Pong
             this.llblLogOut.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.llblLogOut.Visible = false;
             this.llblLogOut.VisitedLinkColor = System.Drawing.Color.Red;
+            this.llblLogOut.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.llblLogOut_LinkClicked);
             // 
             // lblCurrentUserNickname
             // 
@@ -279,6 +301,7 @@ namespace Pong
             // 
             // panelAcceptDuel
             // 
+            this.panelAcceptDuel.Controls.Add(this.btnRefuseDuel);
             this.panelAcceptDuel.Controls.Add(this.btnAcceptDuel);
             this.panelAcceptDuel.Controls.Add(this.lblIPEnemyDuel);
             this.panelAcceptDuel.Location = new System.Drawing.Point(418, 528);
@@ -287,14 +310,28 @@ namespace Pong
             this.panelAcceptDuel.TabIndex = 9;
             this.panelAcceptDuel.Visible = false;
             // 
+            // btnRefuseDuel
+            // 
+            this.btnRefuseDuel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnRefuseDuel.BackColor = System.Drawing.Color.DarkRed;
+            this.btnRefuseDuel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRefuseDuel.Location = new System.Drawing.Point(213, 64);
+            this.btnRefuseDuel.Name = "btnRefuseDuel";
+            this.btnRefuseDuel.Size = new System.Drawing.Size(219, 57);
+            this.btnRefuseDuel.TabIndex = 11;
+            this.btnRefuseDuel.Tag = "noCenter";
+            this.btnRefuseDuel.Text = "Refuse";
+            this.btnRefuseDuel.UseVisualStyleBackColor = false;
+            this.btnRefuseDuel.Click += new System.EventHandler(this.btnRefuseDuel_Click);
+            // 
             // btnAcceptDuel
             // 
             this.btnAcceptDuel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnAcceptDuel.BackColor = System.Drawing.Color.Green;
             this.btnAcceptDuel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAcceptDuel.Location = new System.Drawing.Point(0, 68);
+            this.btnAcceptDuel.Location = new System.Drawing.Point(0, 64);
             this.btnAcceptDuel.Name = "btnAcceptDuel";
-            this.btnAcceptDuel.Size = new System.Drawing.Size(432, 57);
+            this.btnAcceptDuel.Size = new System.Drawing.Size(219, 57);
             this.btnAcceptDuel.TabIndex = 10;
             this.btnAcceptDuel.Tag = "noCenter";
             this.btnAcceptDuel.Text = "Accept";
@@ -334,20 +371,22 @@ namespace Pong
             this.lblPublicIP.Size = new System.Drawing.Size(226, 28);
             this.lblPublicIP.TabIndex = 8;
             this.lblPublicIP.Tag = "noCenter";
-            this.lblPublicIP.Text = "Public IP:";
+            this.lblPublicIP.Text = "Public IP: Retrieving IP...";
             this.lblPublicIP.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // btnMatch
+            // btnMatchOnline
             // 
-            this.btnMatch.BackColor = System.Drawing.Color.White;
-            this.btnMatch.ForeColor = System.Drawing.Color.Black;
-            this.btnMatch.Location = new System.Drawing.Point(472, 404);
-            this.btnMatch.Name = "btnMatch";
-            this.btnMatch.Size = new System.Drawing.Size(332, 50);
-            this.btnMatch.TabIndex = 3;
-            this.btnMatch.Text = "Search for the enemy";
-            this.btnMatch.UseVisualStyleBackColor = false;
-            this.btnMatch.Click += new System.EventHandler(this.btnMatch_Click);
+            this.btnMatchOnline.BackColor = System.Drawing.Color.White;
+            this.btnMatchOnline.Enabled = false;
+            this.btnMatchOnline.ForeColor = System.Drawing.Color.Black;
+            this.btnMatchOnline.Location = new System.Drawing.Point(399, 403);
+            this.btnMatchOnline.Name = "btnMatchOnline";
+            this.btnMatchOnline.Size = new System.Drawing.Size(219, 50);
+            this.btnMatchOnline.TabIndex = 3;
+            this.btnMatchOnline.Tag = "noCenter";
+            this.btnMatchOnline.Text = "Search online";
+            this.btnMatchOnline.UseVisualStyleBackColor = false;
+            this.btnMatchOnline.Click += new System.EventHandler(this.btnMatchOnline_Click);
             // 
             // lblPrivateIP
             // 
@@ -359,7 +398,7 @@ namespace Pong
             this.lblPrivateIP.Size = new System.Drawing.Size(226, 28);
             this.lblPrivateIP.TabIndex = 7;
             this.lblPrivateIP.Tag = "noCenter";
-            this.lblPrivateIP.Text = "Private IP:";
+            this.lblPrivateIP.Text = "Private IP: Retrieving IP...";
             this.lblPrivateIP.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblConnecting
@@ -409,6 +448,7 @@ namespace Pong
             this.panelLobby.Name = "panelLobby";
             this.panelLobby.Size = new System.Drawing.Size(1232, 666);
             this.panelLobby.TabIndex = 0;
+            this.panelLobby.Paint += new System.Windows.Forms.PaintEventHandler(this.panelLobby_Paint);
             // 
             // PongForm
             // 
@@ -456,7 +496,7 @@ namespace Pong
         private System.Windows.Forms.Label lblIPEnemyDuel;
         private System.Windows.Forms.Label lblEnemyIP;
         private System.Windows.Forms.Label lblPublicIP;
-        private System.Windows.Forms.Button btnMatch;
+        private System.Windows.Forms.Button btnMatchOnline;
         private System.Windows.Forms.Label lblPrivateIP;
         private System.Windows.Forms.Label lblConnecting;
         private System.Windows.Forms.Label label1;
@@ -468,6 +508,8 @@ namespace Pong
         private System.Windows.Forms.PictureBox pxBxBackPanelMenu;
         private System.Windows.Forms.LinkLabel llblLogOut;
         private System.Windows.Forms.Label lblCurrentUserNickname;
+        private System.Windows.Forms.Button btnRefuseDuel;
+        private System.Windows.Forms.Button btnMatchLAN;
     }
 }
 

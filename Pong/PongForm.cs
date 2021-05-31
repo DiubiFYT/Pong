@@ -1,23 +1,23 @@
-﻿using Open.Nat;
+﻿using Newtonsoft.Json;
+using Open.Nat;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Text;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Newtonsoft.Json;
-using System.IO;
 
 namespace Pong
 {
     public enum ConnectionLabelStyle
     {
         Success,
-        Connecting,
+        RequestSent,
         Failed
     }
 
@@ -28,12 +28,17 @@ namespace Pong
         readonly public static int defaultPort = 52000;
 
         private UdpClient udpClient;
-        private UdpClient listener;
+        internal static UdpClient listener;
 
         private NatDevice device;
         private Mapping mapping;
 
-        Notification notification = new Notification();
+        internal static PrivateFontCollection pfc = new PrivateFontCollection();
+
+        private System.Windows.Forms.Timer timerLblConnecting = new System.Windows.Forms.Timer()
+        {
+            Interval = 3000
+        };
 
         public PongForm()
         {
@@ -42,13 +47,11 @@ namespace Pong
 
         private void ApplyPixeledFont()
         {
-            PrivateFontCollection pfc = new PrivateFontCollection();
-
             pfc.AddFontFile("Resources\\Pixeled.ttf");
 
             foreach (Control c in panelLobby.Controls)
             {
-                foreach(Control x in c.Controls)
+                foreach (Control x in c.Controls)
                 {
                     x.Font = new Font(pfc.Families[0], x.Font.Size);
 
@@ -56,25 +59,33 @@ namespace Pong
                     {
                         x.Location = new Point((panelLobby.Width / 2) - (x.Width / 2), x.Location.Y);
                     }
-                }              
+                }
             }
         }
 
         private async void PongForm_Load(object sender, EventArgs e)
         {
+            Notification notification = new Notification();
+
             ApplyPixeledFont();
 
             NatDiscoverer discoverer = new();
-            CancellationTokenSource cts = new CancellationTokenSource(10000);
+            CancellationTokenSource cts = new CancellationTokenSource(1500);
             try
             {
-                device = await discoverer.DiscoverDeviceAsync(PortMapper.Pmp, cts);
+                device = await discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts);
                 mapping = new Mapping(Protocol.Udp, defaultPort, defaultPort, "Open ports");
                 await device.CreatePortMapAsync(mapping);
+                btnMatchOnline.Enabled = true;
+                btnMatchLAN.Enabled = true;
             }
             catch
             {
                 notification.Show("Unable to open ports on the router. The game will work only in LAN.", Notification.enmType.Warning);
+                btnMatchLAN.Enabled = true;
+                btnMatchOnline.Enabled = false;
+                btnMatchLAN.Width = txBxEnemyNickname.Width;
+                btnMatchLAN.Left = txBxEnemyNickname.Left;
             }
 
             lblPrivateIP.Text = "Private IP: " + Methods.GetPrivateIP();
@@ -83,64 +94,39 @@ namespace Pong
             await Task.Run(() => { ListenForRequests(); });
         }
 
-        private void btnMatch_Click(object sender, EventArgs e)
+        private void btnMatchOnline_Click(object sender, EventArgs e)
         {
+            Notification notification = new Notification();
+
             try
             {
-                SwitchConnectionLabelStyle(ConnectionLabelStyle.Connecting);
+                if (string.IsNullOrWhiteSpace(txBxEnemyNickname.Text))
+                {
+                    throw new Exception("Insert opponent's nickname.");
+                }
+
+                if (User.currentUser == null)
+                {
+                    throw new Exception("You must log in before matching.");
+                }
+
+                SwitchConnectionLabelStyle(ConnectionLabelStyle.RequestSent);
                 lblConnecting.Visible = true;
                 ApplyPixeledFont();
-              
+
                 User.RetrieveAccountFile(txBxEnemyNickname.Text.Trim());
 
-                User.enemyUser = JsonConvert.DeserializeObject<User>(File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json"));
+                Enemy.currentEnemy = JsonConvert.DeserializeObject<Enemy>(File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json"));
 
                 File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
 
-                string IPClass = GetIPClass(Methods.GetPrivateIP());
-                string IPEnemyClass = GetIPClass(User.enemyUser.LANIP);
+                //string IPClass = GetIPClass(Methods.GetPrivateIP());
+                //string IPEnemyClass = GetIPClass(Enemy..LANIP);
 
-                IPAddress myIP = null;
-                IPAddress enemyIP = null;
-
-                if(IPClass == IPEnemyClass)
-                {
-                    if(IPClass == "Class A")
-                    {
-                        myIP = IPAddress.Parse(Methods.GetPrivateIP());
-                        enemyIP = IPAddress.Parse(User.enemyUser.LANIP);
-                    }
-                    else if (IPClass == "Class B")
-                    {
-                        if(Methods.GetPrivateIP().Split('.')[1] == User.enemyUser.LANIP.Split('.')[1])
-                        {
-                            myIP = IPAddress.Parse(Methods.GetPrivateIP());
-                            enemyIP = IPAddress.Parse(User.enemyUser.LANIP);
-                        }
-                    }
-                    else if(IPClass == "Class C")
-                    {
-                        if (Methods.GetPrivateIP().Split('.')[1] == User.enemyUser.LANIP.Split('.')[1] && Methods.GetPrivateIP().Split('.')[2] == User.enemyUser.LANIP.Split('.')[2])
-                        {
-                            myIP = IPAddress.Parse(Methods.GetPrivateIP());
-                            enemyIP = IPAddress.Parse(User.enemyUser.LANIP);
-                        }
-                    }
-                    else
-                    {
-                        myIP = IPAddress.Parse(Methods.GetPublicIP());
-                        enemyIP = IPAddress.Parse(User.enemyUser.IP);
-                    }
-                }
-                else
-                {
-                    myIP = IPAddress.Parse(Methods.GetPublicIP());
-                    enemyIP = IPAddress.Parse(User.enemyUser.IP);
-                }
+                IPAddress myIP = IPAddress.Parse(Methods.GetPublicIP());
+                IPAddress enemyIP = IPAddress.Parse(Enemy.currentEnemy.IP);
 
                 IPEndPoint endPoint = new IPEndPoint(enemyIP, defaultPort);
-
-                User.enemyUser = null; //TODO: Check if it is needed in the future.
 
                 udpClient = new UdpClient();
                 udpClient.AllowNatTraversal(true);
@@ -148,8 +134,10 @@ namespace Pong
                 udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 udpClient.Connect(endPoint);
 
-                byte[] data = myIP.GetAddressBytes();
-                udpClient.Send(data, data.Length);
+                byte[] nickname = Encoding.ASCII.GetBytes(User.currentUser.Nickname);
+                udpClient.Send(nickname, nickname.Length);
+                byte[] IP = Encoding.ASCII.GetBytes(myIP.ToString());
+                udpClient.Send(IP, IP.Length);
                 udpClient.Close();
                 udpClient.Dispose();
             }
@@ -159,11 +147,63 @@ namespace Pong
                 lblConnecting.Visible = true;
                 ApplyPixeledFont();
 
-                DialogResult dr = MessageBox.Show(exc.Message);
-                if (dr == DialogResult.OK)
+                notification.Show(exc.Message, Notification.enmType.Warning);
+                lblConnecting.Visible = false;
+            }
+        }
+
+        private void btnMatchLAN_Click(object sender, EventArgs e)
+        {
+            Notification notification = new Notification();
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(txBxEnemyNickname.Text))
                 {
-                    lblConnecting.Visible = false;
+                    throw new Exception("Insert opponent's nickname.");
                 }
+
+                if (User.currentUser == null)
+                {
+                    throw new Exception("You must log in before matching.");
+                }
+
+                User.RetrieveAccountFile(txBxEnemyNickname.Text.Trim());
+
+                if(File.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json"))
+                {
+                    Enemy.currentEnemy = JsonConvert.DeserializeObject<Enemy>(File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json"));
+
+                    File.Delete(AppDomain.CurrentDomain.BaseDirectory + "\\currentAccount.json");
+
+                    IPAddress myIP = IPAddress.Parse(Methods.GetPrivateIP());
+                    IPAddress enemyIP = IPAddress.Parse(Enemy.currentEnemy.LANIP);
+                    Enemy.currentEnemy.IP = enemyIP.ToString();
+
+                    IPEndPoint endPoint = new IPEndPoint(enemyIP, defaultPort);
+
+                    udpClient = new UdpClient();
+                    udpClient.Connect(endPoint);
+
+                    byte[] nickname = Encoding.ASCII.GetBytes(User.currentUser.Nickname);
+                    udpClient.Send(nickname, nickname.Length);
+                    byte[] IP = Encoding.ASCII.GetBytes(myIP.ToString());
+                    udpClient.Send(IP, IP.Length);
+                    udpClient.Close();
+                    udpClient.Dispose();
+                    SwitchConnectionLabelStyle(ConnectionLabelStyle.RequestSent);
+                    lblConnecting.Visible = true;
+                    ApplyPixeledFont();
+                }
+            }
+            catch (Exception exc)
+            {
+                SwitchConnectionLabelStyle(ConnectionLabelStyle.Failed);
+                lblConnecting.Visible = true;
+                ApplyPixeledFont();
+
+                notification.Show(exc.Message, Notification.enmType.Warning);
+                lblConnecting.Visible = false;
             }
         }
 
@@ -174,21 +214,34 @@ namespace Pong
                 case ConnectionLabelStyle.Success:
                     lblConnecting.ForeColor = Color.Green;
                     lblConnecting.Text = "Connection successful!";
+                    timerLblConnecting.Tick += TimerLblConnecting_Tick;
+                    timerLblConnecting.Enabled = true;
                     break;
 
-                case ConnectionLabelStyle.Connecting:
+                case ConnectionLabelStyle.RequestSent:
                     lblConnecting.ForeColor = Color.White;
-                    lblConnecting.Text = "Connecting...";
+                    lblConnecting.Text = "Request sent!";
+                    timerLblConnecting.Tick += TimerLblConnecting_Tick;
+                    timerLblConnecting.Enabled = true;
                     break;
 
                 case ConnectionLabelStyle.Failed:
                     lblConnecting.ForeColor = Color.Red;
                     lblConnecting.Text = "Connection failed.";
+                    timerLblConnecting.Tick += TimerLblConnecting_Tick;
+                    timerLblConnecting.Enabled = true;
                     break;
 
                 default:
                     break;
             }
+        }
+
+        private void TimerLblConnecting_Tick(object sender, EventArgs e)
+        {
+            lblConnecting.Visible = false;
+            timerLblConnecting.Tick -= TimerLblConnecting_Tick;
+            timerLblConnecting.Enabled = false;
         }
 
         private void ListenForRequests()
@@ -199,65 +252,51 @@ namespace Pong
             listener.Client.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
             listener.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
-            byte[] bytes = new byte[20];
-            bytes = listener.Receive(ref endPoint);
-
-            if (Encoding.ASCII.GetString(bytes).Contains("Accept match"))
+            while (true)
             {
-                listener.Close();
-                listener.Dispose();
+                byte[] bytes = new byte[20];
+                bytes = listener.Receive(ref endPoint);
 
-                Game.isHost = true;
-                Game.enemyIP = IPAddress.Parse(txBxEnemyNickname.Text);
-
-                Game game = new Game();
-
-                Invoke(new Action(() =>
+                if (Encoding.ASCII.GetString(bytes).Contains("Accept match"))
                 {
-                    panelGame.Visible = true;
-                    panelGame.Controls.Add(game);
-                    game.Visible = true;
-                    panelLobby.Visible = false;
-                }));
-            }
-            else
-            {
-                for (int i = 0; i < bytes.Length; i++)
-                {
-                    if (i != 3)
+                    Game.isHost = true;
+                    Game.enemyIP = IPAddress.Parse(Enemy.currentEnemy.IP);
+
+                    Game game = new Game();
+
+                    Invoke(new Action(() =>
                     {
-                        Invoke(new Action(() => { lblIPEnemyDuel.Text += bytes[i] + "."; }));
-                    }
-                    else
-                    {
-                        Invoke(new Action(() => { lblIPEnemyDuel.Text += bytes[i]; }));
-                    }
+                        Controls.Add(game);
+                        game.BringToFront();
+                        game.Visible = true;
+                    }));
                 }
-
-                Invoke(new Action(() =>
+                else if(!Game.inGame)
                 {
-                    lblIPEnemyDuel.Text += " wants to duel!";
-                    panelAcceptDuel.Visible = true;
-                }));
+                    Enemy.currentEnemy.Nickname = Encoding.ASCII.GetString(bytes);
 
-                Game.isHost = true;
+                    Invoke(new Action(() =>
+                    {
+                        lblIPEnemyDuel.Text = Enemy.currentEnemy.Nickname + " wants to duel!";
+                        panelAcceptDuel.Visible = true;
+                    }));
+
+                    byte[] ip = new byte[100];
+                    ip = listener.Receive(ref endPoint);
+                    Enemy.currentEnemy.IP = Encoding.ASCII.GetString(ip);
+                }
             }
-            listener.Close();
-            listener.Dispose();
         }
 
         private void btnAcceptDuel_Click(object sender, EventArgs e)
         {
-            IPAddress enemyIP = IPAddress.Parse(lblIPEnemyDuel.Text.Split(' ')[0]);
+            IPAddress enemyIP = IPAddress.Parse(Enemy.currentEnemy.IP);
 
-            if (udpClient == null || !udpClient.Client.Connected)
-            {
-                udpClient = new UdpClient();
-                udpClient.AllowNatTraversal(true);
-                udpClient.Client.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
-                udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                udpClient.Connect(enemyIP, defaultPort);
-            }
+            udpClient = new UdpClient();
+            udpClient.AllowNatTraversal(true);
+            udpClient.Client.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
+            udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            udpClient.Connect(enemyIP, defaultPort);
 
             byte[] response = Encoding.ASCII.GetBytes("Accept match");
 
@@ -271,15 +310,17 @@ namespace Pong
 
             Game game = new Game();
 
-            panelGame.Visible = true;
-            panelGame.Controls.Add(game);
+            Controls.Add(game);
             game.Visible = true;
-            panelLobby.Visible = false;
+            panelLobby.SendToBack();
+            panelAcceptDuel.Visible = false;
+
+            lblIPEnemyDuel.Text = "";
         }
 
         private void PongForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if(device != null)
+            if (device != null)
             {
                 device.DeletePortMapAsync(mapping);
             }
@@ -288,7 +329,7 @@ namespace Pong
 
         private void RefreshMenu()
         {
-            if(User.currentUser != new User() && User.currentUser != null)
+            if (User.currentUser != null)
             {
                 lblCurrentUserNickname.Text = User.currentUser.Nickname;
                 lblCurrentUserNickname.Visible = true;
@@ -347,22 +388,24 @@ namespace Pong
 
         private void panelMenu_Paint(object sender, PaintEventArgs e)
         {
-
         }
 
         private void btnCreateAccount_Click(object sender, EventArgs e)
         {
-
+            var ps = new ProcessStartInfo("https://pongsignup.ddns.net")
+            {
+                UseShellExecute = true,
+                Verb = "open"
+            };
+            Process.Start(ps);
         }
 
         private void lblCurrentUserNickname_Click(object sender, EventArgs e)
         {
-
         }
 
         private void lblCurrentUserNickname_Click_1(object sender, EventArgs e)
         {
-
         }
 
         private void pxBxHamburgerMenu_Click(object sender, EventArgs e)
@@ -379,33 +422,20 @@ namespace Pong
 
         private void panelMainMenu_Paint(object sender, PaintEventArgs e)
         {
-
         }
 
-        private string GetIPClass(string ip)
+        private void btnRefuseDuel_Click(object sender, EventArgs e)
         {
-            string privateIP = Methods.GetPrivateIP();
+            Enemy.currentEnemy = null;
+            panelAcceptDuel.Visible = false;
+        }
 
-            string[] splittedIP = privateIP.Split('.');
-            
-            if(int.Parse(splittedIP[0]) >= 1 && int.Parse(splittedIP[0]) <= 127)
-            {
-                return "Class A";
-            }
-            else if(int.Parse(splittedIP[0]) >= 128 && int.Parse(splittedIP[0]) <= 191)
-            {
-                return "Class B";
-            }
-            else if(int.Parse(splittedIP[0]) >= 192 && int.Parse(splittedIP[0]) <= 223)
-            {
-                return "Class C";
-            }
-            else
-            {
-                Notification notification = new Notification();
-                notification.Show("Not a valid IP Address", Notification.enmType.Warning);
-                return null;
-            }
+        private void panelLobby_Paint(object sender, PaintEventArgs e)
+        {
+        }
+
+        private void panelLogin_Paint(object sender, PaintEventArgs e)
+        {
         }
     }
 }
